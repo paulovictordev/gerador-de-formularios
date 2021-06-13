@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <title> Gerador de Formulário </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h3> Gerador de Formulário </h3> <hr>
+
+            <div>
+                <label>Nome do Formulário</label> <br>
+                <input type="text" class="form-control" id="titleForm" name="titleForm" placeholder="Digite o nome para o formulário" required> <br><br>
+
+                <label>Formulário que será gerado</label> <br>
+                <div class="form-control" id="camposDinamicos">
+                </div> <br><br>
+
+                <div class="form-control">
+                    <label>Tipo do campo</label> <br>
+                    <select class="form-select" id="typeField" name="typeField">
+                        <option selected value="text">Campo de Texto</option>
+                        <option value="number">Campo de Número</option>
+                        <option value="email">Campo de Email</option>
+                        <option value="password">Campo de Senha</option>
+                    </select> <br>
+
+                    <label>Nome do campo</label><br>
+                    <input type="text" class="form-control" id="nameField" name="nameField" placeholder="Digite o nome para o Campo"> <br>
+
+                    <label>Campo obrigatório</label> <br>
+                    <input type="radio" id="sim" id="requiredField" name="requiredField" value="1" checked>
+                    <label for="sim">Sim</label><br>
+                    <input type="radio" id="nao" id="requiredField" name="requiredField" value="0">
+                    <label for="nao">Não</label> <br><br>
+
+                    <button class="btn btn-primary" id="adicionar">+ Adicionar Campo</button>
+                </div> <br><br>
+
+                <button class="btn btn-primary" id="gerar">Gerar Formulário</button> <br><br>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous">
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+
+    var dados = [];
+    const add = document.getElementById('adicionar');
+    const gerar = document.getElementById('gerar');
+    const camposDinamicos = document.getElementById('camposDinamicos');
+
+    add.addEventListener('click', (event) => {
+        event.preventDefault();
+
+        let nomeCampo = document.querySelector('#nameField');
+
+        if (nomeCampo.value == '') {
+            alert('Nome do campo é obrigatório');
+            return;
+        }
+
+        let tituloForm = document.querySelector('#titleForm');
+        let tipoCampo = document.querySelector('#typeField');
+        let campoObrigatorio = document.querySelector('input[name=requiredField]:checked');
+
+        let formFields = {
+            titulo: tituloForm.value,
+            id: nomeCampo.value + '_id' .toLowerCase(),
+            nome: nomeCampo.value,
+            tipo: tipoCampo.value,
+            obrigatorio: campoObrigatorio.value
+        };
+
+        dados.push(formFields);
+
+        anexarCampo(formFields);
+
+        nomeCampo.value = '';
+        tipoCampo.value = 'text';
+        campoObrigatorio.value = 1;
+
+    });
+
+    gerar.addEventListener('click', (event) => {
+        event.preventDefault();
+
+        let tituloFormulario = document.querySelector('#titleForm');
+
+        if (tituloFormulario.value == '') {
+            alert('O título para o formulário está vazio.');
+            return;
+        }
+
+        if (dados.length == 0) {
+            alert('O formulário está vazio.');
+            return;
+        }
+
+        const xhr = new XMLHttpRequest();
+
+        xhr.open('POST', 'gerar.php');
+        xhr.setRequestHeader("Content-type", "application/json");
+
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4) {
+                if (xhr.status == 200) {
+                    console.log(xhr.responseText);
+                    alert('Formulário criado.');
+                    tituloFormulario.value = '';
+                    camposDinamicos.innerHTML = "";
+                }
+                else {
+                    console.log(xhr.responseText);
+                }
+            }
+        };
+
+        xhr.send(JSON.stringify(dados));
+    });
+
+    function anexarCampo({tipo, id, nome, obrigatorio}) {
+
+        let fieldset = document.createElement('fieldset');
+
+        let label = document.createElement('label');
+        let textoLabel = document.createTextNode(nome);
+        label.appendChild(textoLabel);
+
+        let br = document.createElement('br');
+
+        let input = document.createElement('input');
+        input.setAttribute('type', tipo);
+        input.setAttribute('class', 'form-control');
+        input.setAttribute('id', id);
+        input.setAttribute('name', nome);
+        input.setAttribute('required', obrigatorio == 1 ? true : false);
+
+        fieldset.appendChild(label);
+        fieldset.appendChild(input);
+
+        camposDinamicos.appendChild(fieldset);
+        camposDinamicos.appendChild(br);
+    }
+</script>
+</body>
+</html>
